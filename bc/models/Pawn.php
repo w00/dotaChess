@@ -27,6 +27,8 @@ class Pawn extends Figure
 		if ($this->color = 0)
 		{
 			$this->check_cell('move', $x, $y - 1);
+			if ($steps == 0)
+				$this->check_cell('move', $x, $y - 2);
 			$this->check_cell('attack', $x - 1, $y - 1);
 			$this->check_cell('attack', $x + 1, $y - 1);
 			$this->check_cell('cast', $x - 1, $y - 1);
@@ -35,10 +37,28 @@ class Pawn extends Figure
 		else
 		{
 			$this->check_cell('move', $x, $y + 1);
+			if ($steps == 0)
+				$this->check_cell('move', $x, $y + 2);
 			$this->check_cell('attack', $x - 1, $y + 1);
 			$this->check_cell('attack', $x + 1, $y + 1);
 			$this->check_cell('cast', $x - 1, $y + 1);
 			$this->check_cell('cast', $x + 1, $y + 1);
+		}
+
+		foreach ($this->move_cells as $c_id)
+		{
+			if (!in_array($c_id, $this->available_cells))
+				$this->available_cells[] = $c_id;
+		}
+		foreach ($this->attack_cells as $c_id)
+		{
+			if (!in_array($c_id, $this->available_cells))
+				$this->available_cells[] = $c_id;
+		}
+		foreach ($this->cast_cells as $c_id)
+		{
+			if (!in_array($c_id, $this->available_cells))
+				$this->available_cells[] = $c_id;
 		}
 	}
 

@@ -17,58 +17,146 @@
 class Bishop extends Figure
 {
 	public $type = 'Bishop';
-	public $sub_type;
 
-	public function get_moves()
+	public function get_cells()
 	{
-		// x - a, b, c, d ... h
-		// y - 1, 2, 3, 4 ... 8
-		$c_coords = Cell::get_coords_by_id($this->current_cell);
-		$c_x = $c_coords[0];
-		$c_y = $c_coords[1];
-		$p_x = $c_x - 1;
-		$i = 0;
-		while ($p_x >= 0)
+		$c_c = Cell::get_coords_by_id($this->current_cell);
+		$x = $c_c[0];
+		$y = $c_c[1];
+
+		$i = 1;
+		$c = $sw = $nw = $se = $ne = 0;
+		while ($c < 1)
 		{
-			
-			$p_x--;
+			if ($x - $i >= 0 && $y - $i >= 0 && $sw == 0)
+			{
+				$c_id = Cell::get_id_by_cords($x - $i, $y - $i);
+				$this->check_cell('attack', $x - $i, $y - $i);
+				$this->check_cell('cast', $x - $i, $y - $i);
+				if (!Cell::is_free($c_id))
+					$sw++;
+			}
+			else
+			{
+				$sw++;
+			}
+
+			if ($x - $i >= 0 && $y + $i <= 7 && $nw == 0)
+			{
+				$c_id = Cell::get_id_by_cords($x - $i, $y + $i);
+				$this->check_cell('attack', $x - $i, $y + $i);
+				$this->check_cell('cast', $x - $i, $y + $i);
+				if (!Cell::is_free($c_id))
+					$nw++;
+			}
+			else
+			{
+				$nw++;
+			}
+
+			if ($x + $i <= 7 && $y - $i >= 0 && $se == 0)
+			{
+				$c_id = Cell::get_id_by_cords($x + $i, $y - $i);
+				$this->check_cell('attack', $x + $i, $y - $i);
+				$this->check_cell('cast', $x + $i, $y - $i);
+				if (!Cell::is_free($c_id))
+					$se++;
+			}
+			else
+			{
+				$se++;
+			}
+
+			if ($x + $i <= 7 && $y + $i <= 7 && $ne == 0)
+			{
+				$c_id = Cell::get_id_by_cords($x + $i, $y + $i);
+				$this->check_cell('attack', $x + $i, $y + $i);
+				$this->check_cell('cast', $x + $i, $y + $i);
+				if (!Cell::is_free($c_id))
+					$ne++;
+			}
+			else
+			{
+				$ne++;
+			}
+
+			if ($sw > 0 && $nw > 0 && $se > 0 && $sw > 0)
+				$c++;
+			$i++;
 		}
-		if ($this->color = 0)
+
+		foreach ($this->move_cells as $c_id)
 		{
-			$this->add_move_cell(0, -1); // Изменения по x и y
+			if (!in_array($c_id, $this->available_cells))
+				$this->available_cells[] = $c_id;
 		}
-		else
+		foreach ($this->attack_cells as $c_id)
 		{
-			$this->add_move_cell(0, 1); // Изменения по x и y
+			if (!in_array($c_id, $this->available_cells))
+				$this->available_cells[] = $c_id;
+		}
+		foreach ($this->cast_cells as $c_id)
+		{
+			if (!in_array($c_id, $this->available_cells))
+				$this->available_cells[] = $c_id;
 		}
 	}
 
-	public function get_attacks()
+	public function check_cell(string $type, int $x, int $y)
 	{
-		if ($this->color = 0)
+		if (Cell::is_exist($x, $y))
 		{
-			$this->add_attack_cell(-1, -1); // Изменения по x и y
-			$this->add_attack_cell(1, -1);
-		}
-		else
-		{
-			$this->add_attack_cell(-1, 1); // Изменения по x и y
-			$this->add_attack_cell(1, 1);
+			$c_id = Cell::get_id_by_cords($x, $y);
+			if ($type == 'move')
+			{
+				if (Cell::is_free($c_id))
+				{
+					if (!in_array($c_id, $this->move_cells))
+						$this->move_cells[] = $c_id;
+					return true;
+				}
+			}
+			elseif ($type == 'attack')
+			{
+				if (!Cell::is_free($c_id))
+				{
+					$obj = Cell::get_figure($c_id);
+					if ($obj->color != $this->color)
+					{
+						if ($obj->health_size > $this->attack_size)
+						{
+							if (!in_array($c_id, $this->attack_cells))
+								$this->attack_cells[] = $c_id;
+						}
+						else
+						{
+							if (!in_array($c_id, $this->attack_cells))
+								$this->attack_cells[] = $c_id;
+							if (!in_array($c_id, $this->move_cells))
+								$this->move_cells[] = $c_id;
+						}
+					}
+					else
+					{
+						$this->add_shield($this->current_cell, $c_id, $size);
+					}
+				}
+				else
+				{
+					if (!in_array($c_id, $this->move_cells))
+						$this->move_cells[] = $c_id;
+				}
+			}
+			elseif ($type == 'cast')
+			{
+				if (!Cell::is_free($c_id))
+				{
+					if (!in_array($c_id, $this->cast_cells))
+						$this->cast_cells[] = $c_id;
+				}
+			}
 		}
 	}
 
-	public function get_casts()
-	{
-		if ($this->color = 0)
-		{
-			$this->add_cast_cell(-1, -1); // Изменения по x и y
-			$this->add_cast_cell(1, -1);
-		}
-		else
-		{
-			$this->add_cast_cell(-1, 1); // Изменения по x и y
-			$this->add_cast_cell(1, 1);
-		}
-	}
 }
 ?>
